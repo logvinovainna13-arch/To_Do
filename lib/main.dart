@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'package:todo_list/home/home_page.dart';
 
 void main() {
