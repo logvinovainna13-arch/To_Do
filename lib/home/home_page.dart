@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:todo_list/add/addTaskScreen.dart';
+import 'package:todo_list/dataBase/toDo.dart';
+import 'package:todo_list/home/home_cubit.dart';
+import 'package:todo_list/home/home_state.dart';
+import 'package:todo_list/home/task_detail_page.dart'; 
 import 'package:todo_list/settingPage.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  final HomeCubit cubit;
 
-  final String title;
+  const MyHomePage({super.key, required this.cubit});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
-
 class _MyHomePageState extends State<MyHomePage> {
-  final List<String> _tasks = [];
+  late HomeCubit _cubit;
 
   @override
   void initState() {
     super.initState();
     print("MyHomePage initState");
+    _cubit = widget.cubit;
+    // Инициализируем данные из кубита при старте
+    _cubit.getTodoList();
   }
 
   void _onAddTap() async {
@@ -25,9 +32,7 @@ class _MyHomePageState extends State<MyHomePage> {
       context,
     ).push<String>(MaterialPageRoute(builder: (_) => const AddTaskScreen()));
     if (result != null && result.trim().isNotEmpty) {
-      setState(() {
-        _tasks.insert(0, result.trim());
-      });
+      _cubit.addTask(result.trim());
       print("Добавлена задача: $result");
     }
   }
@@ -38,76 +43,77 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-        centerTitle: true,
+        title: const Text('Мои задачи'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const SettingsPage()));
+              Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsPage()),
+              );
             },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              "Список актуальных задач:",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-
-            Expanded(
-              child: _tasks.isEmpty
-                  ? const Center(
+      body: BlocBuilder<HomeCubit, HomeState>(
+        builder: (context, state) {
+          if (state.status == TodoStatus.empty) {
+            return const Center(
+              child: Text('У вас еще нет задач! Добавьте задачу.'),
+            );
+          } else if (state.status == TodoStatus.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+            } else {
+            return ListView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: state.todoList.length,
+              itemBuilder: (context, index) {
+                final todo = state.todoList[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  elevation: 2,
+                  child: ListTile(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => TaskDetailPage(todo: todo),
+                        ),
+                      );
+                    },
+                    leading: CircleAvatar(
+                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                       child: Text(
-                        "Нажмите на + чтобы добавить задачу.",
-                        style: TextStyle(color: Colors.grey, fontSize: 15),
+                        "${index + 1}",
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
                       ),
-                    )
-                  : ListView.builder(
-                      itemCount: _tasks.length,
-                      itemBuilder: (context, index) {
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 6),
-                          elevation: 2,
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.primaryContainer,
-                              child: Text(
-                                "${index + 1}",
-                                style: TextStyle(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimaryContainer,
-                                ),
-                              ),
-                            ),
-                            title: Text(
-                              _tasks[index],
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            trailing: const Icon(
-                              Icons.check_circle_outline,
-                              color: Colors.green,
-                            ),
-                          ),
-                        );
-                      },
                     ),
-            ),
-          ],
-        ),
+                    title: Text(
+                      todo.title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        decoration: todo.isDone ? TextDecoration.lineThrough : null,
+                        color: todo.isDone ? Colors.grey : Colors.black87,
+                      ),
+                    ),
+                     subtitle: Text(
+                      todo.createdAt,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    trailing: Icon(
+                      todo.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+                      color: todo.isDone ? Colors.green : Colors.grey,
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _onAddTap,
@@ -116,10 +122,9 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
-  @override
+    @override
   void dispose() {
     print("MyHomePage dispose");
     super.dispose();
   }
-}
+} 
