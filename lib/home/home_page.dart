@@ -108,10 +108,14 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void onAddTap() async {
-    final result = await Navigator.of(context).push(MaterialPageRoute(builder: (_) => AddPage()));
-    _cubit.getTodoList();
+    void onAddTap() async {
+    final result = await Navigator.of(context).push<bool>(AddPage.route());
+    
+    if (result == true && mounted) {
+      context.read<HomeCubit>().loadTodos();
+    }
   }
+
 
   void _onSettingsTap() {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsPage(isDarkTheme: widget.isDarkTheme, onThemeChanged: widget.onThemeChanged)));

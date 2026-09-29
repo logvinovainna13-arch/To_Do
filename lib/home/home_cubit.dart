@@ -19,4 +19,6 @@ class HomeCubit extends Cubit<HomeState> {
 
     return todoList;
   }
+
+  void loadTodos() {}
 }
