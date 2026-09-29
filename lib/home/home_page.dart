@@ -1,41 +1,73 @@
 import 'package:flutter/material.dart';
-import 'package:todo_list/add/addTaskScreen.dart';
-import 'package:todo_list/dataBase/toDo.dart';
-import 'package:todo_list/home/home_cubit.dart';
-import 'package:todo_list/home/home_state.dart';
-import 'package:todo_list/home/task_detail_page.dart'; 
-import 'package:todo_list/settingPage.dart';
+import 'package:todo_list08flu/add/add_page.dart';
+import 'dart:math';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todo_list08flu/database/todo.dart';
+import 'package:todo_list08flu/home/home_cubit.dart';
+import 'package:todo_list08flu/home/home_state.dart';
+import 'package:todo_list08flu/setting_page.dart';
 
 class MyHomePage extends StatefulWidget {
-  final HomeCubit cubit;
+  //final HomeCubit cubit;
+  final bool isDarkTheme;
+  final Function(bool) onThemeChanged;
 
-  const MyHomePage({super.key, required this.cubit});
+  const MyHomePage({
+    super.key, 
+    required this.isDarkTheme, 
+    required this.onThemeChanged,
+  });
 
   @override
+  //Выделяет память для виджета с состоянием
   State<MyHomePage> createState() => _MyHomePageState();
 }
-class _MyHomePageState extends State<MyHomePage> {
-  late HomeCubit _cubit;
 
+class _MyHomePageState extends State<MyHomePage> {
+  List<Todo> _todoList = [];
+  late HomeCubit _cubit;
+  
+//занимает память, то есть в этот момент виджет появляется в оперативной памяти
   @override
   void initState() {
+    // TODO: implement initState
     super.initState();
+    //готовим данные, подгружаем данные с локального хранилища, с сервера посредстовм интернета
+    //инициализируем свойства
+    //запускать анимации, либо таймеры
     print("MyHomePage initState");
-    _cubit = widget.cubit;
-    // Инициализируем данные из кубита при старте
-    _cubit.getTodoList();
+   // _cubit = widget.cubit;
+    _todoList = _cubit.getTodoList();
   }
 
-  void _onAddTap() async {
-    final result = await Navigator.of(
-      context,
-    ).push<String>(MaterialPageRoute(builder: (_) => const AddTaskScreen()));
-    if (result != null && result.trim().isNotEmpty) {
-      _cubit.addTask(result.trim());
-      print("Добавлена задача: $result");
-    }
-  }
+//рисует интерфейс
+  // @override
+  // Widget build(BuildContext context) {
+  //   print("MyHomePage build");
+  //   return Scaffold(
+  //     appBar: AppBar(
+  //       backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+  //       title: Text(widget.title),
+  //     ),
+  //     body: Center(
+  //       child: Column(
+  //         mainAxisAlignment: .center,
+  //         children: [
+  //           const Text('You have pushed the button this many times:'),
+  //           Text(
+  //             '$_counter',
+  //             style: Theme.of(context).textTheme.headlineMedium,
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //     floatingActionButton: FloatingActionButton(
+  //       onPressed: onAddTap,
+  //       tooltip: 'Increment',
+  //       child: const Icon(Icons.add),
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -43,88 +75,63 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Мои задачи'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SettingsPage()),
-              );
-            },
-          ),
-        ],
+        title: Text("Мои задачи"),
+        actions: [IconButton(onPressed: _onSettingsTap, icon: Icon(Icons.settings))],
       ),
       body: BlocBuilder<HomeCubit, HomeState>(
         builder: (context, state) {
-          if (state.status == TodoStatus.empty) {
+          if (state.status == .empty) {
             return const Center(
-              child: Text('У вас еще нет задач! Добавьте задачу.'),
+              child: Text("У вас еще нет задач! Добавьте первую задачу."),
             );
-          } else if (state.status == TodoStatus.isLoading) {
+          } else if (state.status ==.isLoading) {
             return const Center(
               child: CircularProgressIndicator(),
             );
-            } else {
-            return ListView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: state.todoList.length,
-              itemBuilder: (context, index) {
-                final todo = state.todoList[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 6),
-                  elevation: 2,
-                  child: ListTile(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => TaskDetailPage(todo: todo),
-                        ),
-                      );
-                    },
-                    leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                      child: Text(
-                        "${index + 1}",
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ),
-                    title: Text(
-                      todo.title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        decoration: todo.isDone ? TextDecoration.lineThrough : null,
-                        color: todo.isDone ? Colors.grey : Colors.black87,
-                      ),
-                    ),
-                     subtitle: Text(
-                      todo.createdAt,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    trailing: Icon(
-                      todo.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-                      color: todo.isDone ? Colors.green : Colors.grey,
-                    ),
-                  ),
-                );
-              },
+          } else {
+            return Center(
+              child: ListView.builder(
+                itemCount: _todoList.length,
+                itemBuilder: (context, index) {
+                  return ListTile(title: Text(_todoList[index].title));
+                }
+                ),
             );
           }
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _onAddTap,
-        tooltip: 'Добавить задачу',
+        onPressed: onAddTap,
+        tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),
     );
   }
-    @override
-  void dispose() {
-    print("MyHomePage dispose");
-    super.dispose();
+
+  void onAddTap() async {
+    final result = await Navigator.of(context).push(MaterialPageRoute(builder: (_) => AddPage()));
+    _cubit.getTodoList();
   }
-} 
+
+  void _onSettingsTap() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsPage(isDarkTheme: widget.isDarkTheme, onThemeChanged: widget.onThemeChanged)));
+  }
+  
+//уничтожает виджет из памяти (освобождает)
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    print("MyHomePage dispose");
+  //остановить анимацию
+  //остановить таймер или другие фоновые процессы
+  //остановить контроллеры
+  //остановить стримы (stream)
+  }
+}
+
+extension on Random {
+  void nextInt(int length) {
+
+  }
+}

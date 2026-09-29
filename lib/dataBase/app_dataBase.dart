@@ -1,14 +1,50 @@
-import 'package:todo_list/dataBase/toDo.dart';
+import 'package:todo_list08flu/database/todo.dart';
+import 'package:hive/hive.dart';
 
+//Service 
 class AppDatabase {
-  List<Todo>_todolist = [
+  final Box box = Hive.box('todoBox');
 
-   Todo(id: 1, title: "купить книгу", createdAt: "28.02.2026", isDone: true),
-    Todo(id: 2, title: "купить телефон", createdAt: "14.03.2026", isDone: false),
-    Todo(id: 3, title: "Записаться в зал", createdAt: "25.05.2026", isDone: false)
-  ];
+  List<Todo> _todoList = [];
 
-  List<Todo> getTodoList(){
-    return _todolist;
+  AppDatabase() {
+    loadTodos();
   }
+
+  void loadTodos() {
+    final data = box.get('todos', defaultValue: []);
+
+    _todoList = List<Map>.from(data).map( (e) {
+      return Todo(id: e['id'], title: e['title'], createdAt: e['createdAt'], isDone: e['isDone']);
+    }).toList();
+  }
+
+  void saveTodos() {
+    final data = _todoList.map( (todo) {
+      return {
+        "id" : todo.id,
+        "title" : todo.title,
+        "createdAt" : todo.createdAt,
+        "isDone" : todo.isDone
+      };
+    }).toList();
+
+    box.put('todos', data);
+  }
+
+  //CRUD operations
+  //READ
+  List<Todo> getTodoList() {
+    return _todoList;
+  }
+
+  //CREATE 
+  void addTodo(Todo todo) {
+    _todoList.insert(0, todo);
+    saveTodos();
+  } 
+
+  //UPDATE 
+
+  //DELETE 
 }

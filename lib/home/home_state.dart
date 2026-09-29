@@ -1,7 +1,7 @@
-import 'package:todo_list/dataBase/toDo.dart';
+import 'package:todo_list08flu/database/todo.dart';
 
-enum TodoStatus{
-  successs,
+enum TodoStatus {
+  success,
   empty,
   isLoading
 }
@@ -9,23 +9,12 @@ enum TodoStatus{
 class HomeState {
   final List<Todo> todoList;
   final TodoStatus status;
-  final bool isDarkTheme;
 
-  HomeState({
-   required this.todoList,
-   required this.status,
-   required this.isDarkTheme,
-   });
+  const HomeState({required this.todoList, required this.status});
 
-  HomeState copyWith({
-    List<Todo>? todoList, 
-    TodoStatus? status, 
-    bool? isDarkTheme,}){
-    return HomeState(
-      todoList: todoList?? this.todoList, 
-      status: status ?? this.status,
-      isDarkTheme: isDarkTheme ?? this.isDarkTheme,
-      );
+  HomeState copyWith({List<Todo>? todoList, TodoStatus? status}) {
+    return HomeState(todoList: todoList ?? this.todoList, status: status ?? this.status);
   }
-  
+
+
 }
