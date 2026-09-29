@@ -19,6 +19,21 @@ class HomeCubit extends Cubit<HomeState> {
 
     return todoList;
   }
-
   void loadTodos() {}
+
+  void deleteTodo(int id) {}
+}
+class TextFieldTitleException implements Exception {
+  final String message;
+  TextFieldTitleException(this.message);
+
+  @override
+  String toString() => message;
+}
+class TextFieldLengthException implements Exception {
+  final String message;
+  TextFieldLengthException(this.message);
+
+  @override
+  String toString() => message;
 }
