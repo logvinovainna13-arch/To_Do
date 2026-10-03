@@ -4,6 +4,8 @@ import 'package:todo_list08flu/database/todo.dart';
 import 'package:todo_list08flu/main.dart';
 import 'details_cubit.dart';
 import 'details_state.dart';
+import 'package:todo_list08flu/database/app_repository.dart';
+
 
 class TaskDetailsPage extends StatefulWidget {
   final Todo todo;
@@ -30,6 +32,38 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
   void initState() {
     super.initState();
     _textController = TextEditingController(text: widget.todo.title);
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose(); 
+    super.dispose();
+  }
+
+  void _showErrorSnackBar(BuildContext context, String text) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
@@ -66,9 +100,10 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
                         onPressed: () {
+                          final trimmedText = _textController.text.trim();
                           context.read<DetailsCubit>().updateTodo(
                                 widget.todo,
-                                _textController.text,
+                                trimmedText,
                               );
                         },
                         child: const Text("Сохранить изменения"),
@@ -79,36 +114,5 @@ class _TaskDetailsPageState extends State<TaskDetailsPage> {
         },
       ),
     );
-  }
-  void _showErrorSnackBar(BuildContext context, String text) {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                text,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.fromLTRB(12, 12, 12, 20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
   }
 }

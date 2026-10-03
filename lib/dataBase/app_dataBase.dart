@@ -1,10 +1,8 @@
-import 'package:todo_list08flu/database/todo.dart';
 import 'package:hive/hive.dart';
+import 'package:todo_list08flu/database/todo.dart';
 
-//Service 
 class AppDatabase {
   final Box box = Hive.box('todoBox');
-
   List<Todo> _todoList = [];
 
   AppDatabase() {
@@ -14,37 +12,53 @@ class AppDatabase {
   void loadTodos() {
     final data = box.get('todos', defaultValue: []);
 
-    _todoList = List<Map>.from(data).map( (e) {
-      return Todo(id: e['id'], title: e['title'], createdAt: e['createdAt'], isDone: e['isDone']);
-    }).toList();
+    if (data is List) {
+      _todoList = data.map((e) {
+        final Map item = e as Map;
+        return Todo(
+          id: item['id'] as int,
+          title: item['title'] as String,
+          createdAt: item['createdAt'] as String,
+          isDone: item['isDone'] as bool,
+        );
+      }).toList();
+    } else {
+      _todoList = [];
+    }
   }
 
   void saveTodos() {
-    final data = _todoList.map( (todo) {
+    final data = _todoList.map((todo) {
       return {
-        "id" : todo.id,
-        "title" : todo.title,
-        "createdAt" : todo.createdAt,
-        "isDone" : todo.isDone
+        "id": todo.id,
+        "title": todo.title,
+        "createdAt": todo.createdAt,
+        "isDone": todo.isDone
       };
     }).toList();
 
     box.put('todos', data);
   }
 
-  //CRUD operations
-  //READ
   List<Todo> getTodoList() {
-    return _todoList;
+    return List.unmodifiable(_todoList);
   }
 
-  //CREATE 
   void addTodo(Todo todo) {
-    _todoList.insert(0, todo);
+    _todoList = [todo, ..._todoList];
     saveTodos();
   } 
 
-  //UPDATE 
+  void updateTodo(Todo updatedTodo) {
+    final index = _todoList.indexWhere((t) => t.id == updatedTodo.id);
+    if (index != -1) {
+      _todoList[index] = updatedTodo;
+      saveTodos();
+    }
+  }
 
-  //DELETE 
+  void deleteTodo(int id) {
+    _todoList.removeWhere((t) => t.id == id);
+    saveTodos();
+  }
 }

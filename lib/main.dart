@@ -8,7 +8,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo_list08flu/home/onboarding_page.dart';
 
-
 late final AppDatabase appDatabase;
 late final AppRepository appRepository;
 
@@ -41,7 +40,7 @@ class MyApp extends StatefulWidget {
   });
 
   @override
-  State<StatefulWidget> createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState(); 
 }
 
 class _MyAppState extends State<MyApp> {
@@ -71,23 +70,24 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Todo List',
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
-      themeMode: _isDarkTheme ? ThemeMode.dark : ThemeMode.light,
-      home: widget.isOnboardShown
-          ? BlocProvider(
-              create: (_) => _cubit,
-              child: MyHomePage(
+    return BlocProvider<HomeCubit>.value(
+      value: _cubit,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Todo List',
+        theme: ThemeData.light(),
+        darkTheme: ThemeData.dark(),
+        themeMode: _isDarkTheme ? ThemeMode.dark : ThemeMode.light,
+        home: widget.isOnboardShown
+            ? MyHomePage(
                 isDarkTheme: _isDarkTheme, 
                 onThemeChanged: _changeTheme,
+              )
+            : OnboardingPage(
+                isDarkTheme: _isDarkTheme,
+                onThemeChanged: _changeTheme,
               ),
-            )
-          : OnboardingPage(
-              isDarkTheme: _isDarkTheme,
-              onThemeChanged: _changeTheme,
-            ),
+      ),
     );
   }
 }

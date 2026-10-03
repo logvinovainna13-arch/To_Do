@@ -13,11 +13,11 @@ class DetailsState {
 
   DetailsState copyWith({
     DetailsStatus? status,
-    String? errorMessage,
+    String? errorMessage, 
   }) {
     return DetailsState(
       status: status ?? this.status,
-      errorMessage: status == DetailsStatus.error ? (errorMessage ?? this.errorMessage) : null,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 }

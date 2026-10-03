@@ -2,78 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo_list08flu/add/add_cubit.dart';
 import 'package:todo_list08flu/add/add_state.dart';
-import 'package:todo_list08flu/dataBase/app_repository.dart';
 import 'package:todo_list08flu/main.dart';
 
-class AddPage extends StatefulWidget {
-  const AddPage({super.key});
+class DetailsPage extends StatefulWidget {
+  const DetailsPage({super.key});
+
   static Route<bool> route() {
     return MaterialPageRoute(
       builder: (_) => BlocProvider(
         create: (_) => AddCubit(repo: appRepository),
-        child: const AddPage(),
+        child: const DetailsPage(),
       ),
     );
   }
 
   @override
-  State<AddPage> createState() => _AddPageState();
+  State<DetailsPage> createState() => _DetailsPageState();
 }
 
-class _AddPageState extends State<AddPage> {
+class _DetailsPageState extends State<DetailsPage> {
   final TextEditingController _textEditingController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text("Добавить задачу"),
-      ),
-      body: BlocConsumer<AddCubit, AddState>(
-        listener: (context, state) {
-          if (state.status == AddStatus.success) {
-            Navigator.of(context).pop(true);
-          }
-          if (state.status == AddStatus.error && state.errorMessage != null) {
-            showAppSnackBar(context, text: state.errorMessage!, backgroundColor: Colors.red, icon: Icons.error);
-          }
-        },
-        builder: (context, state) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextField(
-                    controller: _textEditingController,
-                    enabled: state.status != AddStatus.loading,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: "Введите название задачи",
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Динамически меняем кнопку на индикатор загрузки
-                  state.status == AddStatus.loading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                          onPressed: () {
-                            context.read<AddCubit>().saveTodo(_textEditingController.text);
-                          },
-                          child: const Text("Сохранить"),
-                        ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
+  void dispose() {
+    _textEditingController.dispose();
+    super.dispose();
   }
 
-  void showAppSnackBar(
+  void _showAppSnackBar(
     BuildContext context, {
     required String text,
     Color? backgroundColor,
@@ -102,8 +58,65 @@ class _AddPageState extends State<AddPage> {
   }
 
   @override
-  void dispose() {
-    _textEditingController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text("Добавить задачу"),
+      ),
+      body: BlocConsumer<AddCubit, AddState>(
+        listener: (context, state) {
+          if (state.status == AddStatus.success) {
+            Navigator.of(context).pop(true);
+          }
+          if (state.status == AddStatus.error && state.errorMessage != null) {
+            _showAppSnackBar(
+              context, 
+              text: state.errorMessage!, 
+              backgroundColor: Colors.red, 
+              icon: Icons.error,
+            );
+          }
+        },
+        builder: (context, state) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextField(
+                    controller: _textEditingController,
+                    enabled: state.status != AddStatus.loading,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: "Введите название задачи",
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  state.status == AddStatus.loading
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: () {
+                            final text = _textEditingController.text.trim();
+                            if (text.isNotEmpty) {
+                              context.read<AddCubit>().saveTodo(text);
+                            } else {
+                              _showAppSnackBar(
+                                context, 
+                                text: "Название задачи не может быть пустым", 
+                                backgroundColor: Colors.orange,
+                              );
+                            }
+                          },
+                          child: const Text("Сохранить"),
+                        ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }

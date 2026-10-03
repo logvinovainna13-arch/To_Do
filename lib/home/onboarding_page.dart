@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:todo_list08flu/home/home_cubit.dart';
 import 'package:todo_list08flu/home/home_page.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -32,17 +34,24 @@ class _OnboardingPageState extends State<OnboardingPage> {
     super.initState();
     _markOnboardingAsShown();
   }
+
   void _markOnboardingAsShown() async {
     final preferences = await SharedPreferences.getInstance();
     await preferences.setBool('isOnboardShown', true);
   }
-   @override
+
+  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
 
   void _navigateToHome() {
+
+    if (!mounted) return;
+
+    context.read<HomeCubit>().loadTodos();
+
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => MyHomePage(
@@ -79,13 +88,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     _currentPage = index;
                   });
                 },
-                 itemBuilder: (context, index) {
+                itemBuilder: (context, index) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Иконка-заглушка вместо картинок
                         Icon(
                           Icons.assignment_turned_in_rounded,
                           size: 100,
@@ -143,7 +151,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       onPressed: () {
                         if (isLastPage) {
                           _navigateToHome();
-                          } else {
+                        } else {
                           _pageController.nextPage(
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.easeInOut,

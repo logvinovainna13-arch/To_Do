@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo_list08flu/add/add_page.dart';
-import 'package:todo_list08flu/database/todo.dart';
 import 'package:todo_list08flu/home/home_cubit.dart';
 import 'package:todo_list08flu/home/home_state.dart';
 import 'package:todo_list08flu/home/task_details_page.dart';
 import 'package:todo_list08flu/setting_page.dart';
-import 'package:todo_list08flu/task_details_page.dart'; // Импортируем экран деталей
+import 'package:todo_list08flu/database/app_repository.dart';
 
 class MyHomePage extends StatefulWidget {
   final bool isDarkTheme;
@@ -28,7 +27,6 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     print("MyHomePage initState");
-    
     context.read<HomeCubit>().loadTodos();
   }
 
@@ -67,7 +65,19 @@ class _MyHomePageState extends State<MyHomePage> {
                 final todo = state.todoList[index];
                 
                 return ListTile(
-                  title: Text(todo.title),
+                  leading: Checkbox(
+                    value: todo.isDone,
+                    onChanged: (bool? value) {
+                      context.read<HomeCubit>().toggleTodoStatus(todo);
+                    },
+                  ),
+                  title: Text(
+                    todo.title,
+                    style: TextStyle(
+                      decoration: todo.isDone ? TextDecoration.lineThrough : TextDecoration.none,
+                      color: todo.isDone ? Colors.grey : null,
+                    ),
+                  ),
                   subtitle: Text(todo.createdAt),
                   onTap: () async {
                     final result = await Navigator.of(context).push<bool>(
@@ -78,7 +88,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       context.read<HomeCubit>().loadTodos();
                     }
                   },
-                  
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () {

@@ -9,7 +9,6 @@ class AddState {
     this.errorMessage,
   });
 
-  // Начальное состояние экрана
   factory AddState.initial() => const AddState(status: AddStatus.initial);
 
   AddState copyWith({
